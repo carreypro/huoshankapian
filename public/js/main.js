@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
   window.errorContainer = document.getElementById('error-container');
   window.errorMessage = document.getElementById('error-message');
   window.downloadBtn = document.getElementById('download-btn');
-  window.regenerateBtn = document.getElementById('regenerate-btn');
+  // 重新生成按钮已移除
+  // window.regenerateBtn = document.getElementById('regenerate-btn');
   window.retryBtn = document.getElementById('retry-btn');
   window.successNotification = document.getElementById('success-notification');
   window.notificationCloseBtn = document.querySelector('.notification-close');
@@ -34,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 添加事件监听器
     generateBtn.addEventListener('click', handleGenerate);
-    regenerateBtn.addEventListener('click', handleGenerate);
+    // regenerateBtn.addEventListener('click', handleGenerate); // 重新生成按钮已移除
     retryBtn.addEventListener('click', handleGenerate);
     notificationCloseBtn.addEventListener('click', () => {
       successNotification.classList.remove('show');
@@ -195,8 +196,18 @@ document.addEventListener('DOMContentLoaded', () => {
       return 'http://localhost:3000';
     }
     
-    // 在生产环境中使用Cloudflare Worker URL
-    return 'https://kapianmofangpro-api.nafiuriak.workers.dev';
+    // 在Cloudflare Pages环境中使用相对路径
+    if (window.location.hostname.includes('pages.dev')) {
+      return '';
+    }
+    
+    // 在Render环境中使用相对路径
+    if (window.location.hostname.includes('onrender.com')) {
+      return '';
+    }
+    
+    // 其他环境也使用相对路径
+    return '';
   }
 
   /**
@@ -220,7 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ text, style }),
+        body: JSON.stringify({ 
+          title: text, // 将text作为title发送
+          content: text, // 将text同时作为content发送
+          style 
+        }),
         mode: 'cors', // 明确指定CORS模式
         signal: controller.signal
       });

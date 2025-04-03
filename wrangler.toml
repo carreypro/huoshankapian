@@ -1,0 +1,13 @@
+# Cloudflare Pages 配置
+name = "ai-cover-generator"
+compatibility_date = "2023-12-01"
+
+# Pages 项目配置
+pages_build_output_dir = "public"
+
+# 环境变量
+[env.production]
+vars = { NODE_ENV = "production" }
+
+# 需要在Cloudflare Dashboard中设置以下环境变量:
+# - DEEPSEEK_API_KEY: DeepSeek API密钥

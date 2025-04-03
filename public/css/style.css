@@ -252,10 +252,11 @@ main {
     height: 100%;
     display: flex;
     flex-direction: column;
+    width: 100%;
   }
   
-  /* 调整按钮组位置 */
-  .input-section .button-group {
+  /* 调整按钮容器位置 */
+  .input-section .button-container {
     margin-top: auto;
     padding-top: 1rem;
   }
@@ -283,15 +284,7 @@ main {
   box-shadow: var(--shadow);
 }
 
-.image-container {
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  margin-bottom: 2rem;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-}
+/* 移除重复的image-container样式定义 */
 
 /* 右下角操作按钮 */
 .action-buttons {
@@ -310,13 +303,14 @@ main {
   border-radius: 12px;
 }
 
-/* 新的导出按钮容器样式 */
-.export-button-container {
+/* 按钮容器样式 */
+.export-button-container,
+.button-container {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  margin-top: 20px;
-  padding: 8px;
+  margin-top: 1rem;
+  padding: 0 1rem 1rem;
+  width: 100%;
 }
 
 .export-btn {
@@ -457,6 +451,7 @@ textarea:focus {
   padding: 0.5rem;
 }
 
+/* 原按钮组样式保留但不再使用 */
 .button-group {
   display: flex;
   gap: 1rem;
@@ -604,24 +599,24 @@ textarea:focus {
 .result-container.active {
   display: block;
   animation: fadeIn 0.5s ease forwards;
-  border: 1px solid var(--border-color);
-  padding: 1rem;
+  padding: 0;
+  width: 100%;
 }
 
 .image-container {
   position: relative;
   width: 100%;
-  padding-top: 133.33%; /* 3:4比例 */
-  margin-bottom: 2rem;
+  max-width: 500px;
+  margin: 0 auto 1rem;
   overflow: hidden;
-  border: 1px solid var(--border-color);
+  background-color: rgba(245, 245, 245, 0.3);
+  border-radius: 20px;
 }
 
 @media (min-width: 1024px) {
   .image-container {
-    padding-top: 120%; /* 在大屏幕上稍微调低高度，使比例更合适 */
-    min-height: 350px;
-    max-height: 500px;
+    max-width: 450px;
+    margin: 0 auto 1rem;
   }
   
   /* 确保 iframe 在左右布局中合适展示 */
@@ -630,19 +625,12 @@ textarea:focus {
   }
 }
 
-.image-container::before {
-  content: '';
-  display: block;
-  padding-top: 56.25%; /* 16:9 比例 */
-}
+/* 移除固定比例的占位空间 */
 
 .image-container img {
-  position: absolute;
-  top: 0;
-  left: 0;
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
   transition: var(--transition);
 }
 
