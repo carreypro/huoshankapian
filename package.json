@@ -1,0 +1,28 @@
+{
+  "name": "ai-cover-generator",
+  "version": "1.0.0",
+  "description": "基于DeepSeek大语言模型的AI生成封面Web应用",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "ai",
+    "deepseek",
+    "cover",
+    "generator",
+    "image"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>火山卡片 - AI 生成你的专属封面</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="shortcut icon" href="images/favicon.png" type="image/png">
+</head>
+<body>
+    <!-- 毛玻璃效果的顶部导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-branding">
+                <img src="images/logo.png" alt="火山卡片Logo" class="nav-logo">
+                <div class="nav-title">火山卡片</div>
+            </div>
+            <div class="nav-links">
+                <a href="https://pic.carreypro.com/" class="nav-link active" target="_blank">像素魔方</a>
+                <a href="https://jianlimofang.pages.dev/" class="nav-link" target="_blank">简历魔方</a>
+                <a href="https://carreypro.com/" class="nav-link" target="_blank">作者</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        
+        <header>
+            <h1>火山卡片：AI 生成你的专属封面</h1>
+            <p class="subtitle">基于 DeepSeek，快速生成独特封面，创意从未如此简单。</p>
+        </header>
+
+        <main>
+            <section class="card input-section">
+                <div class="form-group">
+                    <label for="cover-text">输入卡片文字</label>
+                    <textarea id="cover-text" placeholder="请输入你想要在卡片上显示的文字内容..." rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="style-select">选择风格</label>
+                    <select id="style-select" class="style-dropdown">
+                        <option value="random">随机风格</option>
+                        <!-- 风格选项将通过JavaScript动态添加 -->
+                    </select>
+                </div>
+                
+                <div class="button-group">
+                    <button id="generate-btn" class="btn primary-btn shine-effect">
+                        <i class="fas fa-magic"></i> 生成卡片
+                    </button>
+                </div>
+            </section>
+
+            <section class="card result-section" id="result-section">
+                <div class="loading-container" id="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>正在生成封面，请稍候...</p>
+                    <p class="text-light">DeepSeek大模型正在发挥创意...</p>
+                </div>
+
+                <div class="result-container" id="result-container">
+                    <div class="image-container">
+                        <img id="result-image" src="" alt="生成的卡片">
+                    </div>
+                    <!-- 将导出按钮放在画框外面 -->
+                    <div class="export-button-container">
+                        <a id="download-btn" class="action-btn export-btn" download="volcano-card.jpg">
+                            <i class="fas fa-download"></i> 导出卡片
+                        </a>
+                        <button id="regenerate-btn" class="action-btn secondary-btn">
+                            <i class="fas fa-sync-alt"></i> 重新生成
+                        </button>
+                    </div>
+                </div>
+
+                <div class="error-container" id="error-container">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <h3>生成失败</h3>
+                    <p id="error-message"></p>
+                    <button id="retry-btn" class="btn primary-btn">
+                        <i class="fas fa-redo"></i> 重试
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>火山卡片 | by carrey | 使用DeepSeek大语言模型提供技术支持</p>
+        </footer>
+    </div>
+
+    <!-- 通知组件 -->
+    <div class="notification notification-success" id="success-notification">
+        <div class="notification-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-title">操作成功</div>
+            <div class="notification-message">卡片已成功生成</div>
+        </div>
+        <button class="notification-close">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
