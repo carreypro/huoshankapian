@@ -181,20 +181,40 @@ function extractHtmlCode(content) {
   const htmlRegex = /```html\s*([\s\S]*?)\s*```/;
   const htmlMatch = content.match(htmlRegex);
   
+  let extractedCode = '';
+  
   if (htmlMatch && htmlMatch[1]) {
-    return htmlMatch[1].trim();
+    extractedCode = htmlMatch[1].trim();
+  } else {
+    // 如果没有找到HTML代码块，尝试提取任何代码块
+    const codeRegex = /```(?:\w+)?\s*([\s\S]*?)\s*```/;
+    const codeMatch = content.match(codeRegex);
+    
+    if (codeMatch && codeMatch[1]) {
+      extractedCode = codeMatch[1].trim();
+    } else {
+      // 如果没有找到代码块，使用原始内容
+      extractedCode = content;
+    }
   }
   
-  // 如果没有找到HTML代码块，尝试提取任何代码块
-  const codeRegex = /```(?:\w+)?\s*([\s\S]*?)\s*```/;
-  const codeMatch = content.match(codeRegex);
+  // 清理代码，移除所有代码标记和注释
+  extractedCode = extractedCode
+    // 移除所有可能的代码标记
+    .replace(/```(?:\w+)?|```/g, '')
+    // 移除 HTML 注释
+    .replace(/<!--[\s\S]*?-->/g, '')
+    // 移除可能的语言标记（如 html）
+    .replace(/^\s*(?:html|css|javascript)\s*$/gim, '')
+    // 移除行首和行尾的三个反引号
+    .replace(/^\s*```\s*|\s*```\s*$/gm, '')
+    // 移除代码块中可能出现的注释行
+    .replace(/^\s*\/\/.*$/gm, '')
+    // 移除开头的语言标记
+    .replace(/^\s*(?:html|css|javascript)\s*$/gim, '')
+    .trim();
   
-  if (codeMatch && codeMatch[1]) {
-    return codeMatch[1].trim();
-  }
-  
-  // 如果没有找到代码块，返回原始内容
-  return content;
+  return extractedCode;
 }
 
 /**
