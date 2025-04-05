@@ -82,7 +82,7 @@ async function generateCoverImage(text, defaultPrompt, style) {
           messages: [
             {
               role: "system", 
-              content: "你是一位专业的网页和营销视觉设计师，擅长创建精美的封面设计。请根据用户的要求，生成HTML、CSS和JavaScript代码来创建封面。\n\n重要说明：\n1. 请直接输出纯HTML代码，不要使用任何代码块标记（如```html或```）\n2. 不要在代码前后添加引号或其他标记\n3. 不要添加任何解释或注释\n4. 只输出可以直接在浏览器中渲染的HTML代码\n5. 使用简洁美观的代码，主要使用HTML和CSS即可"
+              content: "你是一位专业的网页设计师。我需要你直接输出一段纯HTML代码，用于创建一个精美的封面图片。这段代码将被直接用于渲染，不需要任何额外的标记或说明。\n\n严格遵守这些规则：\n1. 仅输出纯HTML代码，不要包含任何代码块标记、引号或其他非HTML内容\n2. 不要输出任何```、```html、\"html\"或'html'等标记\n3. 不要包含任何解释、注释或额外文本\n4. 代码必须以<开头，以>结尾\n5. 使用内联CSS样式，确保设计美观"
             },
             {
               role: "user", 
@@ -172,120 +172,156 @@ async function generateCoverImage(text, defaultPrompt, style) {
 }
 
 /**
- * 从生成的内容中提取HTML代码
+ * 从生成的内容中提取并清理HTML代码
  * @param {string} content - 生成的内容
- * @returns {string} - 提取的HTML代码
+ * @returns {string} - 提取并清理后的HTML代码
  */
 function extractHtmlCode(content) {
-  // 首先尝试检测内容是否已经是纯HTML
-  if (content.trim().startsWith('<') && content.trim().endsWith('>')) {
-    // 看起来已经是HTML，进行清理
-    return cleanHtmlCode(content);
+  // 防止空内容
+  if (!content || typeof content !== 'string') {
+    return '';
   }
   
-  // 尝试提取HTML代码块
-  const htmlRegex = /```html\s*([\s\S]*?)\s*```/;
-  const htmlMatch = content.match(htmlRegex);
+  // 清理整个原始内容的前后空白
+  let result = content.trim();
   
-  let extractedCode = '';
+  // 1. 第一阶段：先检查是否整个内容被代码块包围
+  const fullCodeBlockRegex = /^[\s\n]*```(?:html|css|javascript)?[\s\n]*([\s\S]*?)[\s\n]*```[\s\n]*$/;
+  const fullCodeBlockMatch = result.match(fullCodeBlockRegex);
+  if (fullCodeBlockMatch && fullCodeBlockMatch[1]) {
+    result = fullCodeBlockMatch[1].trim();
+  }
   
-  if (htmlMatch && htmlMatch[1]) {
-    extractedCode = htmlMatch[1].trim();
+  // 2. 检查是否整个内容被引号包围
+  if ((result.startsWith('"') && result.endsWith('"')) || 
+      (result.startsWith("'") && result.endsWith("'")) || 
+      (result.startsWith('`') && result.endsWith('`'))) {
+    result = result.substring(1, result.length - 1).trim();
+  }
+  
+  // 3. 递归检查多层包装
+  if ((result.startsWith('"') && result.endsWith('"')) || 
+      (result.startsWith("'") && result.endsWith("'")) || 
+      (result.startsWith('`') && result.endsWith('`')) ||
+      result.startsWith('```') || result.endsWith('```')) {
+    result = extractHtmlCode(result); // 递归处理
+    return result; // 已完成递归清理，直接返回
+  }
+  
+  // 4. 尝试提取HTML标签部分
+  let htmlContent = '';
+  
+  // 查找第一个<标签开始和最后一个>标签结束
+  const firstLT = result.indexOf('<');
+  const lastGT = result.lastIndexOf('>');
+  
+  if (firstLT !== -1 && lastGT !== -1 && lastGT > firstLT) {
+    // 提取<...>部分
+    htmlContent = result.substring(firstLT, lastGT + 1);
   } else {
-    // 如果没有找到HTML代码块，尝试提取任何代码块
-    const codeRegex = /```(?:\w+)?\s*([\s\S]*?)\s*```/;
-    const codeMatch = content.match(codeRegex);
-    
-    if (codeMatch && codeMatch[1]) {
-      extractedCode = codeMatch[1].trim();
-    } else {
-      // 尝试提取<html>到</html>之间的内容
-      const fullHtmlRegex = /<html[\s\S]*?<\/html>/i;
-      const fullHtmlMatch = content.match(fullHtmlRegex);
-      
-      if (fullHtmlMatch && fullHtmlMatch[0]) {
-        extractedCode = fullHtmlMatch[0].trim();
-      } else {
-        // 尝试提取<body>到</body>之间的内容
-        const bodyRegex = /<body[\s\S]*?<\/body>/i;
-        const bodyMatch = content.match(bodyRegex);
-        
-        if (bodyMatch && bodyMatch[0]) {
-          extractedCode = bodyMatch[0].trim();
-        } else {
-          // 如果没有找到任何HTML标记，使用原始内容
-          extractedCode = content;
-        }
-      }
-    }
+    // 如果没有找到完整的HTML标签，则使用清理后的原始内容
+    htmlContent = result;
   }
   
-  return cleanHtmlCode(extractedCode);
+  // 5. 应用所有清理规则
+  return cleanHtmlString(htmlContent);
 }
 
 /**
- * 清理HTML代码，移除所有代码标记和注释
- * @param {string} code - 需要清理的代码
- * @returns {string} - 清理后的代码
+ * 彻底清理HTML字符串中的所有代码标记和非HTML内容
+ * @param {string} htmlString - 需要清理的HTML字符串
+ * @returns {string} - 清理后的纯HTML字符串
  */
-function cleanHtmlCode(code) {
-  // 预处理：检查并移除整个内容外围的引号包裹
-  code = code.trim();
+function cleanHtmlString(htmlString) {
+  if (!htmlString) return '';
   
-  // 检查并移除整个内容外围可能存在的代码块标记
-  const fullCodeBlockRegex = /^```(?:html|css|javascript)?\s*([\s\S]*?)\s*```$/;
-  const fullCodeBlockMatch = code.match(fullCodeBlockRegex);
-  if (fullCodeBlockMatch && fullCodeBlockMatch[1]) {
-    code = fullCodeBlockMatch[1].trim();
-  }
-  
-  // 检查并移除整个内容外围的引号包裹
-  if ((code.startsWith('"') && code.endsWith('"')) || 
-      (code.startsWith("'") && code.endsWith("'")) || 
-      (code.startsWith('`') && code.endsWith('`'))) {
-    code = code.substring(1, code.length - 1).trim();
-  }
-  
-  // 如果外围有多层引号，递归处理
-  if ((code.startsWith('"') && code.endsWith('"')) || 
-      (code.startsWith("'") && code.endsWith("'")) || 
-      (code.startsWith('`') && code.endsWith('`')) ||
-      code.startsWith('```') || code.endsWith('```')) {
-    return cleanHtmlCode(code);
-  }
-  
-  return code
-    // 移除所有可能的代码标记
+  return htmlString
+    // 移除所有代码块标记
     .replace(/```(?:\w+)?|```/g, '')
-    // 移除引号包裹
-    .replace(/^["'`]{1,3}|["'`]{1,3}$/g, '')
+    
+    // 移除开头的"html:"、'html:'等标记
+    .replace(/^[\s\n]*["'`]*\s*html\s*[:：]?\s*/i, '')
+    .replace(/^[\s\n]*["'`]*\s*\\?["'`]html\s*[:：]?\s*/i, '')
+    
     // 移除HTML注释
     .replace(/<!--[\s\S]*?-->/g, '')
-    // 移除可能的语言标记（如单独一行的html、css等）
-    .replace(/^\s*(?:html|css|javascript)\s*$/gim, '')
-    // 移除行首和行尾的三个反引号
-    .replace(/^\s*```\s*|\s*```\s*$/gm, '')
-    // 移除代码块中可能出现的注释行
-    .replace(/^\s*\/\/.*$/gm, '')
-    // 移除双引号包裹的内容开头和结尾
-    .replace(/^\s*""|\"\"\s*$/g, '')
-    // 移除单引号包裹的内容开头和结尾
-    .replace(/^\s*''|''\s*$/g, '')
-    // 移除反引号包裹的内容开头和结尾
-    .replace(/^\s*``|``\s*$/g, '')
-    // 移除内容前后可能的单个引号
-    .replace(/^\s*["'`]|["'`]\s*$/g, '')
-    // 移除每行开头和结尾可能的引号
-    .replace(/^\s*["'`]|["'`]\s*$/gm, '')
-    // 移除每行前面可能的语言标记
-    .replace(/^\s*(?:html|css|javascript):\s*/gim, '')
-    // 移除可能的空行
-    .replace(/^\s*\n/gm, '')
+    
+    // 清理每一行
+    .split('\n')
+    .map(line => {
+      return line
+        // 移除每行开头的引号和html标记
+        .replace(/^\s*["'`]+\s*(?:html\s*[:：]?\s*)?/i, '')
+        // 移除每行结尾的引号
+        .replace(/\s*["'`]+\s*$/g, '')
+        // 移除每行中间可能出现的html:前缀
+        .replace(/["'`]*html["'`]*\s*[:：]\s*/gi, '')
+        // 移除可能的转义字符和引号组合
+        .replace(/\\["'`]html/g, '')
+        .replace(/["'`]html/g, '')
+        .replace(/html["'`]/g, '');
+    })
+    .join('\n')
+    
+    // 再次清理整体
+    .replace(/^[\s\n]*["'`]{1,3}|["'`]{1,3}[\s\n]*$/g, '') // 移除整体的引号包裹
+    .replace(/^\s*html\s*$/gim, '') // 移除单独的html行
+    .replace(/html```/g, '') // 移除可能的混合标记
+    .replace(/```html/g, '') // 移除可能的混合标记
     .trim();
 }
 
 /**
- * 将HTML代码保存到文件
+ * 保存前最终验证HTML是否干净
+ * @param {string} html - 待保存的HTML
+ * @returns {string} - 最终干净的HTML
+ */
+function ensureCleanHtml(html) {
+  if (!html) return '';
+  
+  // 如果HTML不是以<开头且以>结尾，则尝试提取有效部分
+  if (!html.trim().startsWith('<') || !html.trim().endsWith('>')) {
+    const validHtmlRegex = /<[\s\S]*?>/;
+    const match = html.match(validHtmlRegex);
+    if (match) {
+      return match[0];
+    }
+  }
+  
+  // 如果发现HTML边缘有问题，进行额外清理
+  let result = html.trim();
+  
+  // 清理开头
+  while ((!result.startsWith('<') || result.startsWith('<"') || result.startsWith("<'") || 
+          result.startsWith('<`') || result.startsWith('<html')) && result.includes('<')) {
+    // 找到第一个有效的<位置
+    const validStart = result.indexOf('<');
+    if (validStart > 0) {
+      result = result.substring(validStart);
+    } else {
+      // 无法找到有效的开始，跳出循环
+      break;
+    }
+  }
+  
+  // 清理结尾
+  while ((!result.endsWith('>') || result.endsWith('">') || result.endsWith("'>") || 
+          result.endsWith('`>') || result.endsWith('html>')) && result.includes('>')) {
+    // 找到最后一个有效的>位置
+    const validEnd = result.lastIndexOf('>');
+    if (validEnd > 0 && validEnd < result.length - 1) {
+      result = result.substring(0, validEnd + 1);
+    } else {
+      // 无法找到有效的结束，跳出循环
+      break;
+    }
+  }
+  
+  return result.trim();
+}
+
+/**
+ * 将HTML代码保存到文件前进行最终清理
  * @param {string} htmlCode - HTML代码
  * @param {string} fileName - 文件名
  * @returns {Promise<void>}
@@ -293,6 +329,9 @@ function cleanHtmlCode(code) {
 async function saveHtmlToFile(htmlCode, fileName) {
   const fs = require('fs').promises;
   const path = require('path');
+  
+  // 最终清理，确保HTML完全干净
+  const finalCleanHtml = ensureCleanHtml(htmlCode);
   
   // 确保covers目录存在
   const coversDir = path.join(process.cwd(), 'public', 'covers');
@@ -304,7 +343,7 @@ async function saveHtmlToFile(htmlCode, fileName) {
   
   // 保存HTML文件
   const filePath = path.join(coversDir, fileName);
-  await fs.writeFile(filePath, htmlCode, 'utf8');
+  await fs.writeFile(filePath, finalCleanHtml, 'utf8');
   
   console.log(`封面HTML已保存到: ${filePath}`);
 }
