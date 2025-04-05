@@ -82,7 +82,7 @@ async function generateCoverImage(text, defaultPrompt, style) {
           messages: [
             {
               role: "system", 
-              content: "你是一位专业的网页和营销视觉设计师，擅长创建精美的封面设计。请根据用户的要求，生成HTML、CSS和JavaScript代码来创建封面。请生成简洁且美观的代码，使用简单的HTML和CSS即可。"
+              content: "你是一位专业的网页和营销视觉设计师，擅长创建精美的封面设计。请根据用户的要求，生成HTML、CSS和JavaScript代码来创建封面。\n\n重要说明：\n1. 请直接输出纯HTML代码，不要使用任何代码块标记（如```html或```）\n2. 不要在代码前后添加引号或其他标记\n3. 不要添加任何解释或注释\n4. 只输出可以直接在浏览器中渲染的HTML代码\n5. 使用简洁美观的代码，主要使用HTML和CSS即可"
             },
             {
               role: "user", 
@@ -177,6 +177,12 @@ async function generateCoverImage(text, defaultPrompt, style) {
  * @returns {string} - 提取的HTML代码
  */
 function extractHtmlCode(content) {
+  // 首先尝试检测内容是否已经是纯HTML
+  if (content.trim().startsWith('<') && content.trim().endsWith('>')) {
+    // 看起来已经是HTML，进行清理
+    return cleanHtmlCode(content);
+  }
+  
   // 尝试提取HTML代码块
   const htmlRegex = /```html\s*([\s\S]*?)\s*```/;
   const htmlMatch = content.match(htmlRegex);
@@ -193,28 +199,60 @@ function extractHtmlCode(content) {
     if (codeMatch && codeMatch[1]) {
       extractedCode = codeMatch[1].trim();
     } else {
-      // 如果没有找到代码块，使用原始内容
-      extractedCode = content;
+      // 尝试提取<html>到</html>之间的内容
+      const fullHtmlRegex = /<html[\s\S]*?<\/html>/i;
+      const fullHtmlMatch = content.match(fullHtmlRegex);
+      
+      if (fullHtmlMatch && fullHtmlMatch[0]) {
+        extractedCode = fullHtmlMatch[0].trim();
+      } else {
+        // 尝试提取<body>到</body>之间的内容
+        const bodyRegex = /<body[\s\S]*?<\/body>/i;
+        const bodyMatch = content.match(bodyRegex);
+        
+        if (bodyMatch && bodyMatch[0]) {
+          extractedCode = bodyMatch[0].trim();
+        } else {
+          // 如果没有找到任何HTML标记，使用原始内容
+          extractedCode = content;
+        }
+      }
     }
   }
   
-  // 清理代码，移除所有代码标记和注释
-  extractedCode = extractedCode
+  return cleanHtmlCode(extractedCode);
+}
+
+/**
+ * 清理HTML代码，移除所有代码标记和注释
+ * @param {string} code - 需要清理的代码
+ * @returns {string} - 清理后的代码
+ */
+function cleanHtmlCode(code) {
+  return code
     // 移除所有可能的代码标记
     .replace(/```(?:\w+)?|```/g, '')
-    // 移除 HTML 注释
+    // 移除引号包裹
+    .replace(/^["'`]{1,3}|["'`]{1,3}$/g, '')
+    // 移除HTML注释
     .replace(/<!--[\s\S]*?-->/g, '')
-    // 移除可能的语言标记（如 html）
+    // 移除可能的语言标记（如单独一行的html、css等）
     .replace(/^\s*(?:html|css|javascript)\s*$/gim, '')
     // 移除行首和行尾的三个反引号
     .replace(/^\s*```\s*|\s*```\s*$/gm, '')
     // 移除代码块中可能出现的注释行
     .replace(/^\s*\/\/.*$/gm, '')
-    // 移除开头的语言标记
-    .replace(/^\s*(?:html|css|javascript)\s*$/gim, '')
+    // 移除双引号包裹的内容开头和结尾
+    .replace(/^\s*""|\"\"\s*$/g, '')
+    // 移除单引号包裹的内容开头和结尾
+    .replace(/^\s*''|''\s*$/g, '')
+    // 移除反引号包裹的内容开头和结尾
+    .replace(/^\s*``|``\s*$/g, '')
+    // 移除内容前后可能的单个引号
+    .replace(/^\s*["'`]|["'`]\s*$/g, '')
+    // 移除可能的空行
+    .replace(/^\s*\n/gm, '')
     .trim();
-  
-  return extractedCode;
 }
 
 /**
