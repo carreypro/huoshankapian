@@ -111,6 +111,9 @@ async function generateCoverImage(text, defaultPrompt, style) {
     // 解析生成的内容，提取HTML代码
     const htmlCode = extractHtmlCode(generatedContent);
     
+    // 强制只保留有效的HTML标签内容
+    const safeHtmlCode = forceValidHtmlOnly(htmlCode);
+    
     // 生成一个唯一的文件名
     const fileName = `cover_${Date.now()}.html`;
     const filePath = `/covers/${fileName}`;
@@ -333,6 +336,9 @@ async function saveHtmlToFile(htmlCode, fileName) {
   // 最终清理，确保HTML完全干净
   const finalCleanHtml = ensureCleanHtml(htmlCode);
   
+  // 再次强制只保留有效HTML
+  const safeFinalHtml = forceValidHtmlOnly(finalCleanHtml);
+  
   // 确保covers目录存在
   const coversDir = path.join(process.cwd(), 'public', 'covers');
   try {
@@ -343,9 +349,26 @@ async function saveHtmlToFile(htmlCode, fileName) {
   
   // 保存HTML文件
   const filePath = path.join(coversDir, fileName);
-  await fs.writeFile(filePath, finalCleanHtml, 'utf8');
+  await fs.writeFile(filePath, safeFinalHtml, 'utf8');
   
   console.log(`封面HTML已保存到: ${filePath}`);
+}
+
+/**
+ * 在渲染前强制截断非HTML内容
+ * @param {string} html - HTML内容
+ * @returns {string} - 只包含有效HTML的内容
+ */
+function forceValidHtmlOnly(html) {
+  // 只保留第一个<和最后一个>之间的内容
+  const firstLt = html.indexOf('<');
+  const lastGt = html.lastIndexOf('>');
+  
+  if (firstLt !== -1 && lastGt !== -1 && lastGt > firstLt) {
+    return html.substring(firstLt, lastGt + 1);
+  }
+  
+  return '<div>无效HTML</div>'; // 返回默认HTML
 }
 
 module.exports = {
