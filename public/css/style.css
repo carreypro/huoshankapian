@@ -992,3 +992,32 @@ footer {
 .notification-close:hover {
   color: var(--text-color);
 }
+
+/* 内测标签样式 */
+.beta-tag {
+  font-size: 1rem;
+  color: #9e9e9e; /* 淡灰色 */
+  margin-top: 5px;
+  margin-bottom: 15px;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background-color: rgba(240, 240, 240, 0.5);
+  animation: pulse 2s infinite ease-in-out;
+  letter-spacing: 0.5px;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+}
