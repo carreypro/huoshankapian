@@ -355,11 +355,42 @@ document.addEventListener('DOMContentLoaded', () => {
       iframe.style.border = 'none';
       tempContainer.appendChild(iframe);
       
-      // 处理HTML代码，移除保存按钮
-      const processedCode = coverCode.replace(/<button[^>]*(?:save|download|保存|下载)[^>]*>[\s\S]*?<\/button>/gi, '')
+      // 处理HTML代码，彻底清理并移除边缘标记
+      let processedCode = coverCode;
+      
+      // 清理函数 - 移除所有代码块标记和非HTML内容
+      function cleanHtmlForRendering(html) {
+        if (!html) return '';
+        
+        // 只保留第一个<和最后一个>之间的内容
+        const firstLt = html.indexOf('<');
+        const lastGt = html.lastIndexOf('>');
+        
+        if (firstLt !== -1 && lastGt !== -1 && lastGt > firstLt) {
+          html = html.substring(firstLt, lastGt + 1);
+        }
+        
+        return html
+          // 移除所有代码块标记
+          .replace(/```(?:\w+)?|```/g, '')
+          // 移除HTML注释
+          .replace(/<!--[\s\S]*?-->/g, '')
+          // 移除可能存在的html前缀
+          .replace(/^[\s\n]*html[\s\n:]*/i, '')
+          .replace(/["'`]*html["'`]*[\s\n:]*/gi, '')
+          // 移除所有引号包裹
+          .replace(/^[\s\n]*["'`]{1,3}|["'`]{1,3}[\s\n]*$/g, '')
+          .trim();
+      }
+      
+      // 先移除保存按钮
+      processedCode = processedCode.replace(/<button[^>]*(?:save|download|保存|下载)[^>]*>[\s\S]*?<\/button>/gi, '')
                                 .replace(/<a[^>]*(?:save|download|保存|下载)[^>]*>[\s\S]*?<\/a>/gi, '');
       
-      console.log('正在将代码注入iframe...');
+      // 再次彻底清理
+      processedCode = cleanHtmlForRendering(processedCode);
+      
+      console.log('正在将清理后的代码注入iframe...');
       
       // 设置iframe内容
       const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
