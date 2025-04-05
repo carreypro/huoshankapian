@@ -229,6 +229,31 @@ function extractHtmlCode(content) {
  * @returns {string} - 清理后的代码
  */
 function cleanHtmlCode(code) {
+  // 预处理：检查并移除整个内容外围的引号包裹
+  code = code.trim();
+  
+  // 检查并移除整个内容外围可能存在的代码块标记
+  const fullCodeBlockRegex = /^```(?:html|css|javascript)?\s*([\s\S]*?)\s*```$/;
+  const fullCodeBlockMatch = code.match(fullCodeBlockRegex);
+  if (fullCodeBlockMatch && fullCodeBlockMatch[1]) {
+    code = fullCodeBlockMatch[1].trim();
+  }
+  
+  // 检查并移除整个内容外围的引号包裹
+  if ((code.startsWith('"') && code.endsWith('"')) || 
+      (code.startsWith("'") && code.endsWith("'")) || 
+      (code.startsWith('`') && code.endsWith('`'))) {
+    code = code.substring(1, code.length - 1).trim();
+  }
+  
+  // 如果外围有多层引号，递归处理
+  if ((code.startsWith('"') && code.endsWith('"')) || 
+      (code.startsWith("'") && code.endsWith("'")) || 
+      (code.startsWith('`') && code.endsWith('`')) ||
+      code.startsWith('```') || code.endsWith('```')) {
+    return cleanHtmlCode(code);
+  }
+  
   return code
     // 移除所有可能的代码标记
     .replace(/```(?:\w+)?|```/g, '')
@@ -250,6 +275,10 @@ function cleanHtmlCode(code) {
     .replace(/^\s*``|``\s*$/g, '')
     // 移除内容前后可能的单个引号
     .replace(/^\s*["'`]|["'`]\s*$/g, '')
+    // 移除每行开头和结尾可能的引号
+    .replace(/^\s*["'`]|["'`]\s*$/gm, '')
+    // 移除每行前面可能的语言标记
+    .replace(/^\s*(?:html|css|javascript):\s*/gim, '')
     // 移除可能的空行
     .replace(/^\s*\n/gm, '')
     .trim();
