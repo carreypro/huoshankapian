@@ -141,11 +141,11 @@ p {
 }
 
 .nav-link {
-  padding: 0.5rem 0.8rem;
-  margin: 0 0.4rem;
-  color: rgba(0, 0, 0, 0.75);
+  padding: 0.5rem 1rem;
+  margin: 0 0.5rem;
+  color: #000000;
   text-decoration: none;
-  font-size: 0.85rem;
+  font-size: 15px;
   font-weight: 500;
   transition: all 0.2s ease;
   position: relative;
@@ -154,7 +154,7 @@ p {
 
 .nav-link.active,
 .nav-link:hover {
-  color: #000;
+  color: #000000;
 }
 
 
@@ -783,23 +783,26 @@ footer {
   }
   
   .nav-link {
-    padding: 0.2rem 0.15rem;
-    margin: 0;
-    font-size: 0.65rem;
+    padding: 0.2rem 0.25rem;
+    margin: 0 0.1rem;
+    font-size: 11.6px;
     white-space: nowrap;
     letter-spacing: -0.02em;
+    color: #000000;
   }
   
   /* 像素魔方样式 */
   .nav-link.pixel-magic {
-    padding: 0.2rem 0.3rem;
+    padding: 0.2rem 0.35rem;
     white-space: nowrap;
+    color: #000000;
   }
   
   /* 简历魔方和作者链接缩小间距 */
   .nav-link:not(.pixel-magic) {
-    padding-left: 0.12rem;
-    padding-right: 0.12rem;
+    padding-left: 0.18rem;
+    padding-right: 0.18rem;
+    color: #000000;
   }
   
   /* 确保导航栏在小屏幕上不需要水平滚动 */
